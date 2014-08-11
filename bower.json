@@ -1,0 +1,21 @@
+{
+  "name": "iitc-plugins",
+  "version": "0.0.2",
+  "authors": [
+    "Matthias Gutjahr <mattsches@gmail.com>"
+  ],
+  "description": "A speech output plugin for IITC.",
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {},
+  "devDependencies": {
+    "qunit": "~1.15.0"
+  }
+}
