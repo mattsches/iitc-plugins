@@ -1,4 +1,4 @@
-# Metatron Changelog
+# comm2speech Plugin Changelog
 
 ## 0.2.0
 
