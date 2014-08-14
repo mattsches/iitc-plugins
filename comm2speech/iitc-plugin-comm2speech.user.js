@@ -5,7 +5,7 @@
 // @namespace       https://github.com/mattsches/iitc-plugins/
 // @category        Misc
 // @author          Matthias Gutjahr
-// @version         0.2.0
+// @version         0.3.0
 // @updateURL
 // @downloadURL     https://github.com/mattsches/iitc-plugins/raw/master/comm2speech/iitc-plugin-comm2speech.user.js
 // @include         https://www.ingress.com/intel*
@@ -62,6 +62,7 @@ function wrapper(plugin_info) {
     window.plugin.comm2speech.hasLocalStorage = ('localStorage' in window && window['localStorage'] !== null);
     window.plugin.comm2speech.play = '&#128266;';
     window.plugin.comm2speech.mute = '&#128263;';
+    window.plugin.comm2speech.isMuted = false;
 
     window.plugin.comm2speech.setupCallback = function () {
         if (window.plugin.comm2speech.hasSpeechSynthesis) {
@@ -74,9 +75,11 @@ function wrapper(plugin_info) {
 
     window.plugin.comm2speech.extractChatData = function (data) {
         data.raw.success.forEach(function (msg) {
-            var plext = msg[2].plext;
-            var eventLevel = window.plugin.comm2speech.getEventLevel(plext);
-            var isReportable = window.plugin.comm2speech.isEventReportable(
+            var utterance,
+                msgText,
+                plext = msg[2].plext,
+                eventLevel = window.plugin.comm2speech.getEventLevel(plext),
+                isReportable = window.plugin.comm2speech.isEventReportable(
                 eventLevel,
                 window.plugin.comm2speech.reportLevel,
                 plext
@@ -84,12 +87,14 @@ function wrapper(plugin_info) {
             if (isReportable === true) {
                 if (window.plugin.comm2speech.msgTimestamp < msg[1]) {
                     window.plugin.comm2speech.msgTimestamp = msg[1];
-                    var msgText = window.plugin.comm2speech.cleanMsg(plext.text, eventLevel);
+                    msgText = window.plugin.comm2speech.cleanMsg(plext.text, eventLevel);
                     msgText = window.plugin.comm2speech.translateMsg(msgText);
                     console.debug(msgText);
-                    msg = new SpeechSynthesisUtterance(msgText);
-                    msg.lang = window.plugin.comm2speech.lang;
-                    window.speechSynthesis.speak(msg);
+                    if (window.plugin.comm2speech.isMuted !== true) {
+                        utterance = new SpeechSynthesisUtterance(msgText);
+                        utterance.lang = window.plugin.comm2speech.lang;
+                        window.speechSynthesis.speak(utterance);
+                    }
                 }
             }
         });
@@ -242,7 +247,7 @@ function wrapper(plugin_info) {
         ) {
             return window.plugin.comm2speech.REPORT_LEVEL_CONTROL_FIELD_DESTROYED;
         } else {
-            console.log('Unknown plext: ' + JSON.stringify(plext));
+            console.debug('Unknown plext: ' + JSON.stringify(plext));
         }
         return null;
     };
@@ -349,35 +354,98 @@ function wrapper(plugin_info) {
         window.plugin.comm2speech.mutePlayButton = '<div id="comm2speech-box" ><a id="comm2speech-muteplaybutton" class="open" title="TOGGLE MUTE/PLAY" onclick="window.plugin.comm2speech.togglePlay();">' + window.plugin.comm2speech.mute + '</a></div>';
         $('body').append(window.plugin.comm2speech.mutePlayButton);
         $('#comm2speech-box').css({
-            'top': '300px',
+            'top': '250px',
             'left': '10px',
             'font-size': '28px',
             'background-color': '#fff',
-            'width': 'auto',
+            'height': '10px', //auto
+            'width': '25px', //auto
             'display': 'block',
+            'padding': '0 5px 30px',
             'position': 'absolute',
-            'z-index': 5000,
+            'z-index': 1000,
             '-webkit-box-shadow': '0 1px 5px rgba(0,0,0,0.4)',
             '-moz-box-shadow': '0 1px 5px rgba(0,0,0,0.4)',
             'box-shadow': '0 1px 5px rgba(0,0,0,0.4)',
-            'border-radius': '5px'
+            'border-radius': '5px',
+            'overflow' : 'hidden'
+        }).on('mouseover', function () {
+            $(this).css({
+                'height': 'auto',
+                'width': 'auto'
+            });
+        }).on('mouseout', function (){
+            $(this).css({
+                'height': '10px',
+                'width': '25px'
+            });
         });
         $('#comm2speech-muteplaybutton').css({
-            'color': '#bbb',
+            'color': '#aaa',
             'text-decoration': 'none'
+        });
+        $('#comm2speech-box').append('<div id="comm2speech-selectors"></div>');
+        $('#comm2speech-selectors')
+            .append('<label><input type="checkbox" id="comm2speech-reportlevel-selector-1" ><span>Resonator Deployed</span></label>')
+            .append('<label><input type="checkbox" id="comm2speech-reportlevel-selector-8"><span>Portals Linked</span></label>')
+            .append('<label><input type="checkbox" id="comm2speech-reportlevel-selector-128"><span>Control Field Created</span></label>')
+            .append('<label><input type="checkbox" id="comm2speech-reportlevel-selector-16"><span>Portal Captured</span></label>')
+            .append('<label><input type="checkbox" id="comm2speech-reportlevel-selector-2"><span>Resonator Destroyed</span></label>')
+            .append('<label><input type="checkbox" id="comm2speech-reportlevel-selector-4"><span>Your Resonator Destroyed</span></label>')
+            .append('<label><input type="checkbox" id="comm2speech-reportlevel-selector-512"><span>Your Mod Destroyed</span></label>')
+            .append('<label><input type="checkbox" id="comm2speech-reportlevel-selector-256"><span>Link Destroyed</span></label>')
+            .append('<label><input type="checkbox" id="comm2speech-reportlevel-selector-1024"><span>Control Field Destroyed</span></label>')
+            .append('<label><input type="checkbox" id="comm2speech-reportlevel-selector-32"><span>Your Portal Under Attack</span></label>')
+            .append('<label><input type="checkbox" id="comm2speech-reportlevel-selector-64"><span>Your Portal Neutralized</span></label>')
+        ;
+        $('#comm2speech-selectors').css({
+            'display': 'block'
+        });
+        $('#comm2speech-selectors label').css({
+            'font-size': '12px',
+            'line-height': '18px',
+            'display': 'block',
+            'height': '18px'
+        });
+        $('#comm2speech-selectors input').css({
+            'padding': 0,
+            'margin-top': '2px',
+            'position': 'relative',
+            'top': '8px'
+        });
+        window.plugin.comm2speech.initSelectors();
+    };
+
+    window.plugin.comm2speech.initSelectors = function () {
+        $('#comm2speech-selectors input').each(function () {
+            var id = $(this).attr('id').split('comm2speech-reportlevel-selector-')[1];
+            if (window.plugin.comm2speech.reportLevel & id) {
+                $(this).prop('checked', 'checked');
+            } else {
+                $(this).removeProp('checked');
+            }
+        });
+        $('#comm2speech-selectors input').on('click', function () {
+            var id = $(this).attr('id').split('comm2speech-reportlevel-selector-')[1];
+            if ($(this).is(':checked') == true) {
+                window.plugin.comm2speech.reportLevel |= id;
+            } else {
+                window.plugin.comm2speech.reportLevel &= ~id;
+            }
+            console.debug(window.plugin.comm2speech.reportLevel);
         });
     };
 
     window.plugin.comm2speech.togglePlay = function () {
         if ($('#comm2speech-muteplaybutton').html() == '🔇') {
-            console.log('MUTE');
+            console.debug('MUTE');
             window.speechSynthesis.cancel();
-            //window.speechSynthesis.pause();
+            window.plugin.comm2speech.isMuted = true;
             $('#comm2speech-muteplaybutton').html(window.plugin.comm2speech.play).attr('title', 'PLAY');
         } else {
-            console.log('PLAY');
-            your ;
+            console.debug('PLAY');
             $('#comm2speech-muteplaybutton').html(window.plugin.comm2speech.mute).attr('title', 'MUTE');
+            window.plugin.comm2speech.isMuted = false;
         }
     };
 
