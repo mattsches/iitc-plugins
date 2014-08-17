@@ -1,5 +1,9 @@
 # comm2speech Plugin Changelog
 
+## 0.3.1
+
+* Added updateURL for Tampermonkey/Greasemonkey
+
 ## 0.3.0
 
 * Added controls to set custom report levels

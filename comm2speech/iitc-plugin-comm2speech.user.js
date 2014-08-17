@@ -5,8 +5,8 @@
 // @namespace       https://github.com/mattsches/iitc-plugins/
 // @category        Misc
 // @author          Matthias Gutjahr
-// @version         0.3.0
-// @updateURL
+// @version         0.3.1
+// @updateURL       https://github.com/mattsches/iitc-plugins/raw/master/comm2speech/iitc-plugin-comm2speech.user.js
 // @downloadURL     https://github.com/mattsches/iitc-plugins/raw/master/comm2speech/iitc-plugin-comm2speech.user.js
 // @include         https://www.ingress.com/intel*
 // @include         http://www.ingress.com/intel*
